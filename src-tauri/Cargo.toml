@@ -1,0 +1,39 @@
+[package]
+name = "soundboard"
+version = "0.1.0"
+edition = "2024"
+description = "Cross-platform soundboard with global hotkeys and Stream Deck support"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0.104"
+base64 = "0.23.1"
+crossbeam-channel = "0.5.17"
+elgato-streamdeck = "0.14.0"
+env_logger = "0.11.11"
+image = "0.25.10"
+log = "0.4.35"
+rodio = "0.23.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.14.1", features = ["global_shortcuts"] }
+cpal = { version = "0.18", features = ["pulseaudio"] }
+futures-util = "0.3.34"
+tokio = { version = "1.54.1", features = ["sync", "macros"] }
+
+[target."cfg(windows)".dependencies]
+hidapi = { version = "2.6", features = ["windows-native"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

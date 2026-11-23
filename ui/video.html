@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Soundboard – Video</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
+    #hint {
+      position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
+      font: 12px system-ui, sans-serif; color: #fff; background: rgb(0 0 0 / 0.6);
+      padding: 4px 10px; border-radius: 6px; opacity: 0; transition: opacity 300ms; pointer-events: none;
+    }
+    body:hover #hint { opacity: 1; }
+  </style>
+</head>
+<body>
+  <video id="v" playsinline></video>
+  <div id="hint">Double-click: fullscreen · Esc: close</div>
+  <script type="module" src="video.js"></script>
+</body>
+</html>

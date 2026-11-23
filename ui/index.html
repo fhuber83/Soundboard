@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soundboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg>
+      <span>Soundboard</span>
+    </div>
+    <div class="chips">
+      <span id="chip-deck" class="chip" title="Stream Deck">Stream Deck: –</span>
+      <span id="chip-hotkeys" class="chip" title="Global hotkeys">Hotkeys: –</span>
+    </div>
+    <div class="spacer"></div>
+    <label class="master" title="Master volume">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="master" type="range" min="0" max="100" step="1">
+      <span id="master-val" class="num">80</span>
+    </label>
+    <button id="btn-stop" class="danger" title="Stop all sounds and videos">■ Stop all</button>
+    <button id="btn-add" class="primary">+ Add</button>
+    <button id="btn-settings" class="icon" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.3 2.5h4l.3-2.5c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" hidden>
+      <h2>No sounds yet</h2>
+      <p>Drop audio or video files onto this window, or click <b>+ Add</b>.</p>
+      <p class="muted">Audio: mp3, wav, ogg, flac, m4a/aac · Video: mp4, webm, mkv, mov</p>
+    </div>
+  </main>
+
+  <div id="drop-overlay" class="drop-overlay" hidden><div>Drop files to add buttons</div></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <!-- Button editor -->
+  <dialog id="dlg-edit">
+    <form method="dialog" id="form-edit">
+      <h2 id="edit-title">Edit button</h2>
+      <div class="form-grid">
+        <label>Label <input name="label" type="text" autocomplete="off" required></label>
+
+        <label>File
+          <div class="row">
+            <input name="path" type="text" placeholder="/path/to/sound.mp3" spellcheck="false">
+            <button type="button" data-action="browse-file">Browse…</button>
+          </div>
+        </label>
+
+        <div class="row2">
+          <label>Type
+            <select name="kind"><option value="audio">Audio</option><option value="video">Video</option></select>
+          </label>
+          <label>When pressed while playing
+            <select name="mode">
+              <option value="restart">Restart</option>
+              <option value="overlap">Play again (overlap)</option>
+              <option value="toggle">Stop (toggle)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row2">
+          <label><span>Volume <span class="num" id="vol-val"></span></span>
+            <input name="volume" type="range" min="0" max="150" step="1">
+          </label>
+          <label class="check"><input name="looped" type="checkbox"> Loop</label>
+        </div>
+
+        <label>Color
+          <div class="row swatches" id="swatches">
+            <input name="color" type="color">
+          </div>
+        </label>
+
+        <label>Icon image (optional)
+          <div class="row">
+            <input name="icon" type="text" placeholder="none" spellcheck="false">
+            <button type="button" data-action="browse-icon">Browse…</button>
+          </div>
+        </label>
+
+        <label>Hotkey
+          <div class="row">
+            <input name="hotkey" class="hotkey-input" type="text" readonly placeholder="Click, then press a key combination">
+            <button type="button" data-action="clear-hotkey">Clear</button>
+          </div>
+        </label>
+
+        <div>
+          <div class="label">Stream Deck key <span class="muted" id="deck-key-hint"></span></div>
+          <div id="deck-picker" class="deck-picker"></div>
+        </div>
+      </div>
+      <footer>
+        <button type="button" class="danger ghost" data-action="delete">Delete</button>
+        <div class="spacer"></div>
+        <button type="button" data-action="test">▶ Test</button>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog id="dlg-settings">
+    <form method="dialog" id="form-settings">
+      <h2>Settings</h2>
+      <div class="form-grid">
+        <fieldset>
+          <legend>Audio</legend>
+          <label>Output device
+            <select name="outputDevice"></select>
+          </label>
+          <label><span>Monitor device <span class="muted">(also hear what you send to a virtual mic)</span></span>
+            <select name="monitorDevice"></select>
+          </label>
+          <label><span>Monitor volume <span class="num" id="mon-val"></span></span>
+            <input name="monitorVolume" type="range" min="0" max="100" step="1">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Hotkeys</legend>
+          <label>Stop all
+            <div class="row">
+              <input name="stopAllHotkey" class="hotkey-input" type="text" readonly placeholder="Click, then press a key combination">
+              <button type="button" data-action="clear-stop-hotkey">Clear</button>
+            </div>
+          </label>
+          <p class="muted" id="hotkey-help"></p>
+          <div class="row" id="portal-row" hidden>
+            <button type="button" data-action="configure-desktop">Configure in desktop…</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Stream Deck</legend>
+          <label><span>Brightness <span class="num" id="bright-val"></span></span>
+            <input name="deckBrightness" type="range" min="0" max="100" step="1">
+          </label>
+          <div class="label">"Stop all" key</div>
+          <div id="deck-stop-picker" class="deck-picker"></div>
+          <p class="muted" id="deck-help"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Video window</legend>
+          <label class="check"><input name="videoFullscreen" type="checkbox"> Open fullscreen</label>
+          <label class="check"><input name="videoAlwaysOnTop" type="checkbox"> Always on top</label>
+          <label class="check"><input name="videoCloseOnEnd" type="checkbox"> Close when the video ends (otherwise stays black, handy for OBS capture)</label>
+        </fieldset>
+
+        <p class="muted small">Config file: <code id="config-path"></code></p>
+      </div>
+      <footer>
+        <div class="spacer"></div>
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
